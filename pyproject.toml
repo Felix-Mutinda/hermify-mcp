@@ -22,3 +22,10 @@ dev = [
     "ruff>=0.15.17",
     "types-pyyaml>=6.0.12.20260518",
 ]
+
+[project.scripts]
+hermify-mcp = "hermify_mcp.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
