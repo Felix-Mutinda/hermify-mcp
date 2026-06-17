@@ -141,10 +141,8 @@ class HermifyConfig(BaseModel):
         config_path = path or (self.hermify_home / "config.yaml")
         config_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Exclude None values and defaults to keep config clean
-        dump_data = self.model_dump(
-            mode="json", exclude_none=True, exclude_defaults=True
-        )
+        # Exclude None values to keep config clean, but keep defaults for visibility
+        dump_data = self.model_dump(mode="json", exclude_none=True)
         config_path.write_text(yaml.dump(dump_data, default_flow_style=False))
 
 
