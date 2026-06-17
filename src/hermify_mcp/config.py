@@ -77,6 +77,9 @@ class HermifyConfig(BaseModel):
     agent_id: str = Field(default="hermify-agent")
     audit_log_enabled: bool = True
     audit_hash_chain: bool = True
+    http_mode: bool = Field(
+        default=False, description="If True, run MCP server over HTTP instead of stdio."
+    )
 
     # --- Derived Paths ---
     db_path: Optional[Path] = Field(default=None, description="Local DuckDB file path.")

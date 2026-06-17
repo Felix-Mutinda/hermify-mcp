@@ -282,6 +282,7 @@ class DatasetStore:
             "version": version,
             "status": "active",
             "audit_hash": audit_hash,
+            "approved_by": approved_by,
         }
 
     def search_skills(self, query: str, limit: int = 5) -> list[dict]:
