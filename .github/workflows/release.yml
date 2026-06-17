@@ -1,0 +1,106 @@
+name: 🚀 Build, Test, and Release
+
+on:
+  # Trigger on semantic version tags (e.g., v0.2.0)
+  push:
+    tags:
+      - 'v*'
+  # Allow manual triggering from the GitHub Actions UI
+  workflow_dispatch:
+
+jobs:
+  # -------------------------------------------------------------------
+  # Job 1: Build & Verify
+  # -------------------------------------------------------------------
+  build-and-test:
+    name: 🧪 Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: 🧹 Lint (Ruff)
+        run: uv run ruff check .
+
+      - name: 🧠 Type Check (Mypy)
+        run: uv run mypy .
+
+      - name: 🧪 Run Tests (Pytest)
+        run: uv run pytest -v
+
+      - name: 📦 Build Package
+        run: uv build
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-dist
+          path: dist/
+          retention-days: 7
+
+  # -------------------------------------------------------------------
+  # Job 2: Publish to PyPI (Trusted Publishing / OIDC)
+  # -------------------------------------------------------------------
+  publish-to-pypi:
+    name: 📤 Publish to PyPI
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    # The environment name MUST match the one configured in PyPI settings
+    environment:
+      name: pypi
+      url: https://pypi.org/p/hermify-mcp
+    permissions:
+      # CRITICAL: This permission is required for OIDC Trusted Publishing
+      id-token: write  
+    steps:
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-dist
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        # NOTE: We intentionally DO NOT provide user/password. 
+        # The action uses the id-token to authenticate via OIDC.
+
+  # -------------------------------------------------------------------
+  # Job 3: Create GitHub Release
+  # -------------------------------------------------------------------
+  github-release:
+    name: 🏷️ Create GitHub Release
+    needs: publish-to-pypi
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required to create releases
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history for release notes
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-dist
+          path: dist/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
+          draft: false
+          prerelease: false
