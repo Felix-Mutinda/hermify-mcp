@@ -20,4 +20,5 @@ dev = [
     "pytest>=9.1.0",
     "pytest-asyncio>=1.4.0",
     "ruff>=0.15.17",
+    "types-pyyaml>=6.0.12.20260518",
 ]
